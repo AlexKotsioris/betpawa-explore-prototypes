@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Early Settle vs Cashout — UX test script</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --ink:#e8eaed; --mut:#9aa0a6; --dim:#6b7075;
+    --green:#8bc34a; --greenink:#0f1a05; --amber:#f2b23a; --blue:#5b9dff;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+  header h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+  header .sub{color:var(--mut);font-size:15px;margin:0 0 4px}
+  .taglines{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+  .tag{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--mut)}
+  hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+  h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+  h3{font-size:17px;margin:0 0 6px}
+  p{margin:0 0 12px}
+
+  /* version cards */
+  .versions{display:grid;gap:14px}
+  .vcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;
+    display:flex;justify-content:space-between;align-items:center;gap:16px;scroll-margin-top:20px}
+  .vcard .meta span{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+  .vcard code{background:var(--panel2);padding:2px 6px;border-radius:6px;font-size:12px;color:var(--blue)}
+  .open{flex:none;text-decoration:none;font-weight:700;font-size:14px;color:var(--greenink);
+    background:var(--green);padding:10px 18px;border-radius:10px}
+  .open:active{transform:scale(.98)}
+
+  /* script steps */
+  ol.steps{margin:0;padding-left:20px}
+  ol.steps li{margin:0 0 10px}
+  .say{background:var(--panel);border-left:3px solid var(--blue);border-radius:0 10px 10px 0;
+    padding:12px 16px;color:#dfe6f2;font-style:italic;margin:8px 0 14px}
+
+  /* questions */
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin:0 0 16px}
+  .q .qh{font-size:12px;font-weight:700;color:var(--green);letter-spacing:.06em;margin:0 0 8px}
+  .q .qt{font-size:16px;font-weight:600;margin:0 0 6px}
+  .q .ctx{color:var(--mut);font-size:14px;margin:0 0 12px}
+  .opts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .opts li{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;background:var(--panel2)}
+  .opts li .k{display:inline-block;width:20px;font-weight:700;color:var(--mut)}
+  /* answer-key styling (revealed) */
+  body.key .opts li.correct{border-color:var(--green);background:#1c2a12}
+  body.key .opts li.correct .k{color:var(--green)}
+  body.key .opts li.trap{border-color:#5a3b1a;background:#2a1e0c}
+  body.key .opts li.trap .k{color:var(--amber)}
+  body.key .opts li.correct::after{content:" ✓ correct";color:var(--green);font-weight:700;font-size:12px}
+  body.key .opts li.trap::after{content:" ⚠ common trap";color:var(--amber);font-weight:700;font-size:12px}
+  .modnote{font-size:13px;color:var(--dim);margin:10px 0 0}
+  body.key .modnote{color:var(--amber)}
+
+  .bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;
+    background:linear-gradient(var(--bg),var(--bg) 70%,transparent);padding:14px 0;margin:-14px 0 0}
+  button.toggle{cursor:pointer;font-weight:700;font-size:13px;color:var(--ink);
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px}
+  button.toggle:hover{border-color:var(--green)}
+  .footer{color:var(--dim);font-size:13px;margin-top:28px}
+  a.inline{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Early Settle vs Cashout — test questions</h1>
+    <p class="sub">Per-leg settlement on a multibet · two naming versions of the same feature</p>
+    <div class="taglines">
+      <span class="tag">Version A · “Early Settle Leg”</span>
+      <span class="tag">Version B · “Cashout Leg”</span>
+    </div>
+  </header>
+
+  <div class="bar">
+    <button class="toggle" id="toggleKey">Show answer key</button>
+    <span class="modnote" style="margin:0">For the moderator — keep hidden while testing.</span>
+  </div>
+
+  <hr>
+
+  <!-- VERSIONS -->
+  <h2>The two versions</h2>
+  <div class="versions">
+    <div class="vcard" id="early-settle">
+      <div class="meta">
+        <h3>Version A — “Early Settle Leg”</h3>
+        <span>The per-leg action is labelled <code>Early Settle Leg</code>.</span>
+      </div>
+      <a class="open" href="../early-settle.html" target="_blank" rel="noopener">Open ↗</a>
+    </div>
+    <div class="vcard" id="early-cashout">
+      <div class="meta">
+        <h3>Version B — “Cashout Leg”</h3>
+        <span>Identical flow; the action is labelled <code>Cashout Leg</code>.</span>
+      </div>
+      <a class="open" href="../early-cashout.html" target="_blank" rel="noopener">Open ↗</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- WHAT THE FEATURE DOES -->
+  <h2>What the feature does (for the moderator)</h2>
+  <p>On a multibet (combo), the user can secure <strong>one leg</strong> early. That leg locks in at an
+  updated Potential Payout and <strong>can no longer let the multi down</strong>, whatever happens next.
+  The <strong>rest of the multi keeps running</strong> — the user is paid if the remaining legs win, or if they
+  cash the bet out. The only difference between the two versions is the wording of the button:
+  <em>“Early Settle Leg”</em> vs <em>“Cashout Leg.”</em></p>
+
+  <hr>
+
+  <!-- MODERATOR SCRIPT -->
+  <h2>Moderator script</h2>
+  <p class="say">“Thanks for helping out. This is an early prototype, so some things won’t be clickable —
+  that’s fine. There are no right or wrong answers; I’m testing the design, not you. Please think aloud as
+  you go — tell me what you see, what you’d tap, and what you expect to happen.”</p>
+  <ol class="steps">
+    <li>Assign the participant <strong>one version</strong> (A or B). Split participants evenly across the two.</li>
+    <li>Open that version on a phone and hand it over. Let them explore the bet in <em>My Bets → Pending</em> for a moment.</li>
+    <li>Point them to the leg with the <code>Early Settle Leg</code> / <code>Cashout Leg</code> button.
+      Ask: <em>“Before tapping anything — what do you think this button does?”</em> (This maps to Q4.)</li>
+    <li>Let them tap through the flow and read the explanation. Then ask the comprehension questions below.</li>
+    <li>Record which option they pick <em>and</em> their wording. The trap answers are what we’re watching for.</li>
+  </ol>
+
+  <hr>
+
+  <!-- QUESTIONS -->
+  <h2>Comprehension questions</h2>
+
+  <div class="q">
+    <div class="qh">Q1 · Scope of the action</div>
+    <div class="qt">You’re on a 4-leg multi and you tap <em>“Early Settle Leg” / “Cashout Leg”</em> on one leg. What happens to the rest of your bet?</div>
+    <ul class="opts">
+      <li class="correct"><span class="k">A</span> The other three legs keep running as a live multi — the bet is still on.</li>
+      <li class="trap"><span class="k">B</span> The whole bet is cashed out and settled right now.</li>
+      <li><span class="k">C</span> The other legs are cancelled and only this leg can pay.</li>
+      <li><span class="k">D</span> Not sure.</li>
+    </ul>
+    <p class="modnote">Watching for: do they think the whole bet ends? (Trap B — expected to be higher on “Cashout Leg”.)</p>
+  </div>
+
+  <div class="q">
+    <div class="qh">Q2 · The secured leg</div>
+    <div class="qt">After you secure that leg, its selection goes on to <strong>lose</strong> later in the match. What happens to your multi?</div>
+    <ul class="opts">
+      <li class="correct"><span class="k">A</span> Nothing — that leg is locked in and can’t let the multi down.</li>
+      <li class="trap"><span class="k">B</span> The whole multi loses, because one leg lost.</li>
+      <li><span class="k">C</span> Only that leg’s share of the stake is deducted.</li>
+      <li><span class="k">D</span> Not sure.</li>
+    </ul>
+    <p class="modnote">Watching for: do they grasp “set in stone… can no longer let your multi down”?</p>
+  </div>
+
+  <div class="q">
+    <div class="qh">Q3 · Getting paid</div>
+    <div class="qt">You secured one leg, and your remaining legs all win. How are you paid?</div>
+    <ul class="opts">
+      <li class="correct"><span class="k">A</span> You win the multi at the updated Potential Payout shown after securing the leg.</li>
+      <li><span class="k">B</span> The secured leg is paid separately, as its own single bet.</li>
+      <li class="trap"><span class="k">C</span> You only get the amount that was shown at the moment you secured the leg.</li>
+      <li><span class="k">D</span> Not sure.</li>
+    </ul>
+    <p class="modnote">Watching for: confusion between “secured a leg” and “cashed out the bet”.</p>
+  </div>
+
+  <div class="q">
+    <div class="qh">Q4 · Wording (the key comparison)</div>
+    <div class="qt">Before reading any explanation — from the <strong>button wording alone</strong>, what did you expect it to do?</div>
+    <div class="ctx">Ask this identically on both versions and compare the split.</div>
+    <ul class="opts">
+      <li class="correct"><span class="k">A</span> Secure just this one leg and keep the rest of the bet running.</li>
+      <li class="trap"><span class="k">B</span> Cash out / end the whole bet now.</li>
+      <li><span class="k">C</span> Change or swap my pick on that leg.</li>
+      <li><span class="k">D</span> Not sure.</li>
+    </ul>
+    <p class="modnote">The headline metric: % choosing trap B on “Cashout Leg” vs “Early Settle Leg”. A big gap = the word “Cashout” is over-promising a whole-bet action.</p>
+  </div>
+
+  <div class="footer">
+    <p>Internal UX testing build · <a class="inline" href="../">← back to prototype hub</a></p>
+  </div>
+
+</div>
+
+<script>
+  var btn = document.getElementById('toggleKey');
+  function sync(){ var on = document.body.classList.contains('key');
+    btn.textContent = on ? 'Hide answer key' : 'Show answer key'; }
+  btn.addEventListener('click', function(){ document.body.classList.toggle('key'); sync(); });
+  sync();
+</script>
+</body>
+</html>
